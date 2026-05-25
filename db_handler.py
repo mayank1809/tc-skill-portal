@@ -196,3 +196,23 @@ def export_to_excel():
     conn.close()
 
     return export_path
+
+# ---------------------------------------------------
+# CLEAR ALL DATABASE ENTRIES
+# ---------------------------------------------------
+
+def clear_database():
+
+    create_database()
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM employees"
+    )
+
+    conn.commit()
+
+    conn.close()
