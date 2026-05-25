@@ -23,6 +23,18 @@ hide_streamlit_style = """
         visibility: hidden;
     }
 
+    [data-testid="stToolbar"] {
+        display: none;
+    }
+
+    [data-testid="stDecoration"] {
+        display: none;
+    }
+
+    [data-testid="stStatusWidget"] {
+        visibility: hidden;
+    }
+
     </style>
 """
 
