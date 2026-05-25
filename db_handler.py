@@ -2,7 +2,33 @@ import sqlite3
 import pandas as pd
 import os
 
-DB_PATH = "data/skill_portal.db"
+# ---------------------------------------------------
+# DATABASE PATH
+# ---------------------------------------------------
+
+os.makedirs("data", exist_ok=True)
+
+DB_PATH = os.path.join(
+    "data",
+    "skill_portal.db"
+)
+
+# ---------------------------------------------------
+# SAFE DATABASE CONNECTION
+# ---------------------------------------------------
+
+def get_connection():
+
+    conn = sqlite3.connect(
+        DB_PATH,
+        timeout=30,
+        check_same_thread=False
+    )
+
+    # Better concurrency support
+    conn.execute("PRAGMA journal_mode=WAL;")
+
+    return conn
 
 # ---------------------------------------------------
 # CREATE DATABASE + TABLE
@@ -10,9 +36,7 @@ DB_PATH = "data/skill_portal.db"
 
 def create_database():
 
-    os.makedirs("data", exist_ok=True)
-
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
 
     cursor = conn.cursor()
 
@@ -74,11 +98,14 @@ def save_or_update_employee(data):
 
     create_database()
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
 
     cursor = conn.cursor()
 
+    # ---------------------------------------------------
     # CHECK EXISTING EMPLOYEE
+    # ---------------------------------------------------
+
     cursor.execute("""
         SELECT rowid
         FROM employees
@@ -89,7 +116,7 @@ def save_or_update_employee(data):
     result = cursor.fetchone()
 
     # ---------------------------------------------------
-    # UPDATE EXISTING
+    # UPDATE EXISTING USER
     # ---------------------------------------------------
 
     if result:
@@ -116,14 +143,18 @@ def save_or_update_employee(data):
         cursor.execute(query, values)
 
     # ---------------------------------------------------
-    # INSERT NEW
+    # INSERT NEW USER
     # ---------------------------------------------------
 
     else:
 
-        columns = ", ".join([f'"{k}"' for k in data.keys()])
+        columns = ", ".join(
+            [f'"{k}"' for k in data.keys()]
+        )
 
-        placeholders = ", ".join(["?"] * len(data))
+        placeholders = ", ".join(
+            ["?"] * len(data)
+        )
 
         values = list(data.values())
 
@@ -138,21 +169,29 @@ def save_or_update_employee(data):
     conn.close()
 
 # ---------------------------------------------------
-# EXPORT TO EXCEL
+# EXPORT DATABASE TO EXCEL
 # ---------------------------------------------------
 
 def export_to_excel():
 
-    conn = sqlite3.connect(DB_PATH)
+    create_database()
+
+    conn = get_connection()
 
     df = pd.read_sql_query(
         "SELECT * FROM employees",
         conn
     )
 
-    export_path = "data/tc_skill_report.xlsx"
+    export_path = os.path.join(
+        "data",
+        "tc_skill_report.xlsx"
+    )
 
-    df.to_excel(export_path, index=False)
+    df.to_excel(
+        export_path,
+        index=False
+    )
 
     conn.close()
 
